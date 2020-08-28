@@ -545,10 +545,26 @@ parse_field(
         ec = error::need_more;
         return;
     }
+    auto end_name = p;
     for(;;)
     {
-        if(*p == ':')
-            break;
+        if (*p == ':' || *p == ' ' || *p == '\t')
+        {
+            end_name = p;
+            while (*p == ' ' || *p == '\t')
+            {
+                ++p;
+                if (p >= last)
+                {
+                    ec = error::need_more;
+                    return;
+                }
+            }
+            if (*p == ':')
+                break;
+            ec = error::bad_field;
+            return;
+        }
         if(! is_token[static_cast<
             unsigned char>(*p)])
         {
@@ -568,7 +584,7 @@ parse_field(
         ec = error::bad_field;
         return;
     }
-    name = make_string(first, p);
+    name = make_string(first, end_name);
     ++p; // eat ':'
     char const* token_last = nullptr;
     for(;;)
